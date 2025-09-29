@@ -832,5 +832,7 @@ function agregar_mobapp_urbano_domicilio_envios_method( $methods ){
     $methods['mobapp-urbano-domicilio-envios'] = 'WC_MOBAPP_URBANO_DOMICILIO_ENVIOS';
     return $methods;
 }
-
+add_filter('woocommerce_shipping_rate_label', function($label, $rate) {
+    return $label;
+}, 10, 2);
 ?>
