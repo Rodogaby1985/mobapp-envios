@@ -839,4 +839,3 @@ add_filter('woocommerce_cart_shipping_method_full_label', function($label, $meth
     return $label;
 }, 10, 2);
 ?>
-?>
