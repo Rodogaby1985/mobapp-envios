@@ -27,35 +27,43 @@ function mobapp_setup_schedule() {
 add_action( 'mobapp_daily_event', 'mobapp_do_this_daily' );
 
 function mobapp_do_this_daily() {
-    ////////////////////////CA DOM////////////////////
-    $url_ca_dom = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=0&single=true&output=csv';
-    $csv_data_ca_dom = file_get_contents_curl($url_ca_dom);
-    if ($csv_data_ca_dom) set_transient('datos_csv_ca_dom', $csv_data_ca_dom, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////CA SUC////////////////////
-    $url_ca_suc = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1897873008&single=true&output=csv';
-    $csv_data_ca_suc = file_get_contents_curl($url_ca_suc);
-    if ($csv_data_ca_suc) set_transient('datos_csv_ca_suc', $csv_data_ca_suc, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////ANDREANI DOM////////////////////
-    $url_andreani_dom = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=506491561&single=true&output=csv';
-    $csv_data_andreani_dom = file_get_contents_curl($url_andreani_dom);
-    if ($csv_data_andreani_dom) set_transient('datos_csv_andreani_dom', $csv_data_andreani_dom, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////ANDREANI SUC////////////////////
-    $url_andreani_suc = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=2067361143&single=true&output=csv';
-    $csv_data_andreani_suc = file_get_contents_curl($url_andreani_suc);
-    if ($csv_data_andreani_suc) set_transient('datos_csv_andreani_suc', $csv_data_andreani_suc, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////OCA DOM////////////////////
-    $url_oca_dom = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=98567282&single=true&output=csv';
-    $csv_data_oca_dom = file_get_contents_curl($url_oca_dom);
-    if ($csv_data_oca_dom) set_transient('datos_csv_oca_dom', $csv_data_oca_dom, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////OCA SUC////////////////////
-    $url_oca_suc = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1766360152&single=true&output=csv';
-    $csv_data_oca_suc = file_get_contents_curl($url_oca_suc);
-    if ($csv_data_oca_suc) set_transient('datos_csv_oca_suc', $csv_data_oca_suc, DAY_IN_SECONDS); //guardo la info 24hs
-    ////////////////////////URBANO DOM////////////////////
-    $url_urbano_dom = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1666417641&single=true&output=csv';
-    $csv_data_urbano_dom = file_get_contents_curl($url_urbano_dom);
-    if ($csv_data_urbano_dom) set_transient('datos_csv_urbano_dom', $csv_data_urbano_dom, DAY_IN_SECONDS); //guardo la info 24hs
+    // URLs y transients de tarifas
+    $csvs = array(
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=0&single=true&output=csv',
+            'transient' => 'datos_csv_ca_dom'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1897873008&single=true&output=csv',
+            'transient' => 'datos_csv_ca_suc'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=506491561&single=true&output=csv',
+            'transient' => 'datos_csv_andreani_dom'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=2067361143&single=true&output=csv',
+            'transient' => 'datos_csv_andreani_suc'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=98567282&single=true&output=csv',
+            'transient' => 'datos_csv_oca_dom'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1766360152&single=true&output=csv',
+            'transient' => 'datos_csv_oca_suc'
+        ),
+        array(
+            'url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1666417641&single=true&output=csv',
+            'transient' => 'datos_csv_urbano_dom'
+        ),
+    );
+    foreach ($csvs as $csv) {
+        $csv_data = file_get_contents_curl($csv['url']);
+        if ($csv_data) set_transient($csv['transient'], $csv_data, DAY_IN_SECONDS);
+    }
 }
+
 /////////////////////// Eliminar el cron job al desactivar el plugin ////////////////////
 function eliminar_cron_diario() {
     $timestamp = wp_next_scheduled('mobapp_daily_event');
@@ -78,42 +86,42 @@ function file_get_contents_curl($url) {
     return $data;
 }
 
+/**
+ * Helper para obtener el CSV de tarifas con recarga automática si el transient fue eliminado (ej: flush Redis).
+ * Siempre retorna el CSV o string vacío si todo falla.
+ */
+function mobapp_get_tarifa_csv($transient_name, $url) {
+    $csv_data = get_transient($transient_name);
+    if (!$csv_data) {
+        // Solo si está vacío, lo baja y lo guarda (solo la primera vez tras flush)
+        $csv_data = file_get_contents_curl($url);
+        if ($csv_data) set_transient($transient_name, $csv_data, DAY_IN_SECONDS);
+    }
+    return $csv_data ? $csv_data : '';
+}
+
 function ocultar_envios($rates, $package) {
-    
-    $zonas = array();                                           //
-    $delivery_zones = WC_Shipping_Zones::get_zones();           //
-    foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-        $zonas[] = $the_zone['zone_name'];                      //
-    }                                                           //
-    
+    $zonas = array();
+    $delivery_zones = WC_Shipping_Zones::get_zones();
+    foreach ((array) $delivery_zones as $key => $the_zone ) {
+        $zonas[] = $the_zone['zone_name'];
+    }
     $zona_del_carrito = WC_Shipping_Zones::get_zone_matching_package( $package );
     $zona_del_carrito_nombre = $zona_del_carrito->get_zone_name();
     $correos =  WC()->shipping->get_shipping_methods();
-   
     foreach($correos as $correo){
         $id = $correo->id;
         $zonas_posiciones = $correo->get_option('ocultar_para_zonas');
-        if($zonas_posiciones == null)
-        {
-            continue;
-        }
+        if($zonas_posiciones == null) continue;
         if(is_array($zonas_posiciones)){
             foreach($zonas_posiciones as $zona_pos){
                 if($zonas[(int)$zona_pos] == $zona_del_carrito_nombre){
                     unset($rates[$id]);
                 }
-                else{
-                    isset($rates[$id]);
-                }
             }
-        }
-        else{
+        } else {
             if($zonas[(int)$zonas_posiciones] == $zona_del_carrito_nombre){
                 unset($rates[$id]);
-                break;
-            }
-            else{
-                isset($rates[$id]);
             }
         }
     }
@@ -121,8 +129,7 @@ function ocultar_envios($rates, $package) {
 }
 add_filter('woocommerce_package_rates', 'ocultar_envios', 10, 2);
 
-/*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-// Todas las clases de métodos de envío ahora incluyen la opción de destacado y tooltip CSS
+/* ==== Destacado y tooltip ==== */
 function mobapp_add_common_fields(&$form_fields) {
     $form_fields['featured'] = array(
         'title'   => esc_html__('Destacar este método', 'mobapp-envios'),
@@ -138,8 +145,6 @@ function mobapp_add_common_fields(&$form_fields) {
         'desc_tip'    => true
     );
 }
-
-/* ======== Helper para añadir tooltip destacado ======== */
 function mobapp_append_featured_tooltip(&$titulo, $method_object) {
     $featured = $method_object->get_option('featured');
     $featured_text = $method_object->get_option('featured_text');
@@ -174,8 +179,9 @@ function mobapp_append_featured_tooltip(&$titulo, $method_object) {
         $titulo .= $info_icon;
     }
 }
-/*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 
+/* ==== Métodos de envío con tooltip y recarga automática ==== */
+// CORREO ARGENTINO DOMICILIO
 add_action( 'woocommerce_shipping_init', 'mobapp_correoargentino_domicilio_envios_init' );
 function mobapp_correoargentino_domicilio_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_CORREOARGENTINO_DOMICILIO_ENVIOS' ) ) {
@@ -193,12 +199,14 @@ function mobapp_correoargentino_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_ca_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_ca_dom',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=0&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
                 $titulo = $this->get_option('title');
-                $asd = $this->get_option('ocultar_para_zonas');
                 if ($csv_data) {
                     $filas = explode("\n", $csv_data);
                     foreach ($filas as $fila) {
@@ -214,23 +222,19 @@ function mobapp_correoargentino_domicilio_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-correoargentino-domicilio-envios' ),
@@ -270,8 +274,7 @@ function agregar_mobapp_correoargentino_domicilio_envios_method( $methods ){
     $methods['mobapp-correoargentino-domicilio-envios'] = 'WC_MOBAPP_CORREOARGENTINO_DOMICILIO_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* CORREO ARGENTINO SUCURSAL */
 add_action( 'woocommerce_shipping_init', 'mobapp_correoargentino_sucursal_envios_init' );
 function mobapp_correoargentino_sucursal_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_CORREOARGENTINO_SUCURSAL_ENVIOS' ) ) {
@@ -289,7 +292,10 @@ function mobapp_correoargentino_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_ca_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_ca_suc',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1897873008&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -309,23 +315,19 @@ function mobapp_correoargentino_sucursal_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-correoargentino-sucursal-envios' ),
@@ -365,8 +367,7 @@ function agregar_mobapp_correoargentino_sucursal_envios_method( $methods ){
     $methods['mobapp-correoargentino-sucursal-envios'] = 'WC_MOBAPP_CORREOARGENTINO_SUCURSAL_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* ANDREANI DOMICILIO */
 add_action( 'woocommerce_shipping_init', 'mobapp_andreani_domicilio_envios_init' );
 function mobapp_andreani_domicilio_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_ANDREANI_DOMICILIO_ENVIOS' ) ) {
@@ -384,7 +385,10 @@ function mobapp_andreani_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_andreani_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_andreani_dom',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=506491561&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -404,23 +408,19 @@ function mobapp_andreani_domicilio_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-andreani-domicilio-envios' ),
@@ -435,7 +435,7 @@ function mobapp_andreani_domicilio_envios_init() {
                      'default'     => esc_html__('A COTIZAR - PESO SUPERIOR A 30KG - ANDREANI A DOMICILIO', 'mobapp-andreani-domicilio-envios' ),
                      'desc_tip'    => true
                   ),
-                   'ocultar_para_zonas' => array(
+                  'ocultar_para_zonas' => array(
                     'title'             => __( 'Ocultar envío para zonas específicas', 'mobapp-andreani-domicilio-envios' ),
                     'type'              => 'multiselect',
                     'class'             => 'wc-enhanced-select',
@@ -460,8 +460,7 @@ function agregar_mobapp_andreani_domicilio_envios_method( $methods ){
     $methods['mobapp-andreani-domicilio-envios'] = 'WC_MOBAPP_ANDREANI_DOMICILIO_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* ANDREANI SUCURSAL */
 add_action( 'woocommerce_shipping_init', 'mobapp_andreani_sucursal_envios_init' );
 function mobapp_andreani_sucursal_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_ANDREANI_SUCURSAL_ENVIOS' ) ) {
@@ -479,7 +478,10 @@ function mobapp_andreani_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_andreani_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_andreani_suc',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=2067361143&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -499,23 +501,19 @@ function mobapp_andreani_sucursal_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-andreani-sucursal-envios' ),
@@ -555,8 +553,7 @@ function agregar_mobapp_andreani_sucursal_envios_method( $methods ){
     $methods['mobapp-andreani-sucursal-envios'] = 'WC_MOBAPP_ANDREANI_SUCURSAL_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* OCA DOMICILIO */
 add_action( 'woocommerce_shipping_init', 'mobapp_oca_domicilio_envios_init' );
 function mobapp_oca_domicilio_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_OCA_DOMICILIO_ENVIOS' ) ) {
@@ -574,7 +571,10 @@ function mobapp_oca_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_oca_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_oca_dom',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=98567282&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -594,23 +594,19 @@ function mobapp_oca_domicilio_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-oca-domicilio-envios' ),
@@ -625,7 +621,7 @@ function mobapp_oca_domicilio_envios_init() {
                      'default'     => esc_html__('A COTIZAR - PESO SUPERIOR A 30KG - OCA A DOMICILIO', 'mobapp-oca-domicilio-envios' ),
                      'desc_tip'    => true
                   ),
-                   'ocultar_para_zonas' => array(
+                  'ocultar_para_zonas' => array(
                     'title'             => __( 'Ocultar envío para zonas específicas', 'mobapp-oca-domicilio-envios' ),
                     'type'              => 'multiselect',
                     'class'             => 'wc-enhanced-select',
@@ -650,8 +646,7 @@ function agregar_mobapp_oca_domicilio_envios_method( $methods ){
     $methods['mobapp-oca-domicilio-envios'] = 'WC_MOBAPP_OCA_DOMICILIO_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* OCA SUCURSAL */
 add_action( 'woocommerce_shipping_init', 'mobapp_oca_sucursal_envios_init' );
 function mobapp_oca_sucursal_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_OCA_SUCURSAL_ENVIOS' ) ) {
@@ -669,7 +664,10 @@ function mobapp_oca_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_oca_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_oca_suc',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1766360152&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -689,23 +687,19 @@ function mobapp_oca_sucursal_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-oca-sucursal-envios' ),
@@ -745,8 +739,7 @@ function agregar_mobapp_oca_sucursal_envios_method( $methods ){
     $methods['mobapp-oca-sucursal-envios'] = 'WC_MOBAPP_OCA_SUCURSAL_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-
+/* URBANO DOMICILIO */
 add_action( 'woocommerce_shipping_init', 'mobapp_urbano_domicilio_envios_init' );
 function mobapp_urbano_domicilio_envios_init() {
     if ( ! class_exists( 'WC_MOBAPP_URBANO_DOMICILIO_ENVIOS' ) ) {
@@ -764,7 +757,10 @@ function mobapp_urbano_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_urbano_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_tarifa_csv(
+                    'datos_csv_urbano_dom',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1666417641&single=true&output=csv'
+                );
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -784,23 +780,19 @@ function mobapp_urbano_domicilio_envios_init() {
                         }
                     }
                 }
-                else{
-                    echo 'No se pudo leer csv';
-                }
                 mobapp_append_featured_tooltip($titulo, $this);
                 $this->add_rate( array(
                     'id'     => $this->id,
                     'label'  => $titulo,
                     'cost'   => $cost
                 ));
-                $this->add_rate( $package ); // Aplicar precio
             }
             public function init_form_fields() {
-                $zonas = array();                                           //
-                $delivery_zones = WC_Shipping_Zones::get_zones();           //
-                foreach ((array) $delivery_zones as $key => $the_zone ) {   //
-                    $zonas[] = $the_zone['zone_name'];                      //
-                }                                                           //
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
                 $form_fields = array(
                   'enabled' => array(
                      'title'   => esc_html__('Activar/Desactivar', 'mobapp-urbano-domicilio-envios' ),
@@ -840,4 +832,5 @@ function agregar_mobapp_urbano_domicilio_envios_method( $methods ){
     $methods['mobapp-urbano-domicilio-envios'] = 'WC_MOBAPP_URBANO_DOMICILIO_ENVIOS';
     return $methods;
 }
-/*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+?>
