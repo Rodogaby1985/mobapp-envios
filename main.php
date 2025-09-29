@@ -139,6 +139,32 @@ function mobapp_add_common_fields(&$form_fields) {
     );
 }
 
+/* ======== Helper para obtener datos CSV con recarga automática ======== */
+function mobapp_get_csv_data($csv_type) {
+    $csv_urls = array(
+        'ca_dom' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=0&single=true&output=csv',
+        'ca_suc' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1897873008&single=true&output=csv',
+        'andreani_dom' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=506491561&single=true&output=csv',
+        'andreani_suc' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=2067361143&single=true&output=csv',
+        'oca_dom' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=98567282&single=true&output=csv',
+        'oca_suc' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1766360152&single=true&output=csv',
+        'urbano_dom' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1666417641&single=true&output=csv'
+    );
+    
+    $transient_key = 'datos_csv_' . $csv_type;
+    $csv_data = get_transient($transient_key);
+    
+    // Si no hay datos en transient (ej: cache flushed), recargar automáticamente
+    if (!$csv_data && isset($csv_urls[$csv_type])) {
+        $csv_data = file_get_contents_curl($csv_urls[$csv_type]);
+        if ($csv_data) {
+            set_transient($transient_key, $csv_data, DAY_IN_SECONDS);
+        }
+    }
+    
+    return $csv_data;
+}
+
 /* ======== Helper para añadir tooltip destacado ======== */
 function mobapp_append_featured_tooltip(&$titulo, $method_object) {
     $featured = $method_object->get_option('featured');
@@ -193,7 +219,7 @@ function mobapp_correoargentino_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_ca_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('ca_dom'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -289,7 +315,7 @@ function mobapp_correoargentino_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_ca_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('ca_suc'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -384,7 +410,7 @@ function mobapp_andreani_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_andreani_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('andreani_dom'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -479,7 +505,7 @@ function mobapp_andreani_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_andreani_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('andreani_suc'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -574,7 +600,7 @@ function mobapp_oca_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_oca_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('oca_dom'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -669,7 +695,7 @@ function mobapp_oca_sucursal_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_oca_suc'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('oca_suc'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
@@ -764,7 +790,7 @@ function mobapp_urbano_domicilio_envios_init() {
                 add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
             }
             public function calculate_shipping( $package = Array() ){
-                $csv_data = get_transient('datos_csv_urbano_dom'); //TOMO INFO TEMPORAL
+                $csv_data = mobapp_get_csv_data('urbano_dom'); // Usar helper con recarga automática
                 $provincia = $package[ 'destination' ][ 'state' ];
                 $peso_carrito = WC()->cart->get_cart_contents_weight();
                 $cost = '0';
