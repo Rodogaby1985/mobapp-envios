@@ -835,4 +835,8 @@ function agregar_mobapp_urbano_domicilio_envios_method( $methods ){
 add_filter('woocommerce_shipping_rate_label', function($label, $rate) {
     return $label;
 }, 10, 2);
+add_filter('woocommerce_cart_shipping_method_full_label', function($label, $method) {
+    return $label;
+}, 10, 2);
+?>
 ?>
