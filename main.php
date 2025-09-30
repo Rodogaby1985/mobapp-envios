@@ -3,7 +3,7 @@
 * Plugin Name: MOBAPP ENVÍOS
 * Plugin URI: https://mobappexpress.com
 * Description: Envíos cotizados Correo Argentino, Andreani, OCA y Urbano
-* Version: 2.2.0
+* Version: 2.2.5
 * Author: Emanuel Loto
 * Author URI: http://localhost/wordpress
 * Requires at least: 4.0
