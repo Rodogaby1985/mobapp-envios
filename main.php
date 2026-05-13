@@ -3,7 +3,7 @@
 * Plugin Name: MOBAPP ENVÍOS POR CORREO
 * Plugin URI: https://mobappexpress.com
 * Description: Envíos cotizados Correo Argentino, Andreani, OCA y Urbano
-* Version: 2.1.3
+* Version: 2.1.4
 * Author: MOBAPP EXPRESS
 * Author URI: https://mobappexpress.com
 * Requires at least: 4.0
@@ -34,6 +34,8 @@ function mobapp_do_this_daily() {
         array('url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=98567282&single=true&output=csv', 'transient' => 'datos_csv_oca_dom'),
         array('url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1766360152&single=true&output=csv', 'transient' => 'datos_csv_oca_suc'),
         array('url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6l-Z2nmlhlTRQp5Aaki1Mwpao8XKHrSTRllymp8UiUP7dZ20hVitvqSvRl72GwDnXsGh9P31mq0vi/pub?gid=1666417641&single=true&output=csv', 'transient' => 'datos_csv_urbano_dom'),
+        array('url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR10pelt-jk2dKh38-ar_pgGsXo2fADUjHOMkBK7jt3uV8Y-zQJSRGcaZSk3S_kL6GP33IAw6Mjd3LA/pub?gid=1928763953&single=true&output=csv', 'transient' => 'datos_csv_flash_cp'),
+        array('url' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR10pelt-jk2dKh38-ar_pgGsXo2fADUjHOMkBK7jt3uV8Y-zQJSRGcaZSk3S_kL6GP33IAw6Mjd3LA/pub?gid=1451646784&single=true&output=csv', 'transient' => 'datos_csv_flash_tarifa'),
     );
     foreach ($csvs as $csv) {
         $csv_data = file_get_contents_curl($csv['url']);
@@ -1140,6 +1142,167 @@ function mobapp_urbano_domicilio_envios_init() {
 add_filter('woocommerce_shipping_methods','agregar_mobapp_urbano_domicilio_envios_method');
 function agregar_mobapp_urbano_domicilio_envios_method( $methods ){
     $methods['mobapp-urbano-domicilio-envios'] = 'WC_MOBAPP_URBANO_DOMICILIO_ENVIOS';
+    return $methods;
+}
+
+/* MOBAPP FLASH DOMICILIO */
+add_action( 'woocommerce_shipping_init', 'mobapp_flash_domicilio_envios_init' );
+function mobapp_flash_domicilio_envios_init() {
+    if ( ! class_exists( 'WC_MOBAPP_FLASH_DOMICILIO_ENVIOS' ) ) {
+        class WC_MOBAPP_FLASH_DOMICILIO_ENVIOS extends WC_Shipping_Method{
+            public function __construct(){
+                $this->id                 = 'mobapp-flash-domicilio-envios';
+                $this->method_title       = __( 'MOBAPP FLASH DOMICILIO');
+                $this->method_description = __( 'Servicio de última milla MOBAPP en CABA y GBA (4 zonas por código postal). Cotiza tus envíos con MOBAPP ENVÍOS' );
+                $this->init();
+                $this->enabled            = $this->get_option( 'enabled' );
+                $this->title              = $this->get_option('title', 'MOBAPP FLASH DOMICILIO');
+            }
+            public function init(){
+                $this->init_form_fields();
+                add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
+            }
+            public function calculate_shipping( $package = Array() ){
+                // 1. Cargar CSV de CPs (mapeo CP → zona)
+                $csv_cp = mobapp_get_tarifa_csv(
+                    'datos_csv_flash_cp',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vR10pelt-jk2dKh38-ar_pgGsXo2fADUjHOMkBK7jt3uV8Y-zQJSRGcaZSk3S_kL6GP33IAw6Mjd3LA/pub?gid=1928763953&single=true&output=csv'
+                );
+                // 2. Cargar CSV de tarifas (mapeo zona+peso → precio)
+                $csv_tarifa = mobapp_get_tarifa_csv(
+                    'datos_csv_flash_tarifa',
+                    'https://docs.google.com/spreadsheets/d/e/2PACX-1vR10pelt-jk2dKh38-ar_pgGsXo2fADUjHOMkBK7jt3uV8Y-zQJSRGcaZSk3S_kL6GP33IAw6Mjd3LA/pub?gid=1451646784&single=true&output=csv'
+                );
+
+                // 3. Obtener CP destino y normalizar a 4 dígitos
+                $cp = isset($package['destination']['postcode']) ? trim((string) $package['destination']['postcode']) : '';
+                if ( empty($cp) ) return;
+                $cp = preg_replace('/\D/', '', $cp);
+                $cp = str_pad($cp, 4, '0', STR_PAD_LEFT);
+
+                // 4. Obtener peso del carrito
+                $peso_carrito = WC()->cart ? floatval(WC()->cart->get_cart_contents_weight()) : 0;
+
+                // 5. Buscar la zona del CP en el CSV de CPs (saltar header, soportar BOM y CPs con decimales)
+                $zona = null;
+                if ($csv_cp) {
+                    $csv_cp = ltrim($csv_cp, "\xEF\xBB\xBF"); // BOM UTF-8
+                    $filas = explode("\n", $csv_cp);
+                    $primera = true;
+                    foreach ($filas as $fila) {
+                        if ($primera) { $primera = false; continue; }
+                        $cols = str_getcsv($fila);
+                        if ( ! isset($cols[0]) ) continue;
+                        $cp_csv = preg_replace('/\D/', '', (string) $cols[0]);
+                        $cp_csv = str_pad($cp_csv, 4, '0', STR_PAD_LEFT);
+                        if ($cp_csv === $cp) {
+                            $zona = isset($cols[1]) ? trim($cols[1]) : null;
+                            break;
+                        }
+                    }
+                }
+
+                // Si CP no está en zona MOBAPP FLASH, no ofrecer rate
+                if ( empty($zona) ) return;
+
+                // 6. Buscar la tarifa por zona+peso en el CSV de tarifas
+                $base_cost = '0';
+                $titulo = $this->get_option('title');
+                if ($csv_tarifa) {
+                    $csv_tarifa = ltrim($csv_tarifa, "\xEF\xBB\xBF");
+                    $filas = explode("\n", $csv_tarifa);
+                    $primera = true;
+                    foreach ($filas as $fila) {
+                        if ($primera) { $primera = false; continue; }
+                        $cols = str_getcsv($fila);
+                        if ( count($cols) < 6 ) continue;
+                        $titulo_tabla = isset($cols[0]) ? $cols[0] : '';
+                        $col_zona     = isset($cols[2]) ? trim($cols[2]) : '';
+                        $peso_min     = isset($cols[3]) ? floatval($cols[3]) : 0;
+                        $peso_max     = isset($cols[4]) ? floatval($cols[4]) : 0;
+                        $precio       = isset($cols[5]) ? $cols[5] : 0;
+                        if ( $col_zona === $zona && $peso_carrito <= $peso_max && $peso_carrito > $peso_min ) {
+                            $titulo = $titulo_tabla;
+                            $base_cost = $precio;
+                            break;
+                        }
+                    }
+                }
+
+                // Si no se encontró tarifa, mostrar el título fallback (peso excedente) con costo 0,
+                // o no ofrecer rate si base_cost sigue en '0'. Para mantener consistencia con los demás
+                // métodos del plugin, mostramos siempre la opción con el título fallback.
+                $packing_cost = floatval( $this->get_option('costo_embalaje', 0) );
+                $packing_label = $this->get_option('label_embalaje', 'Costo embalaje');
+                $total_cost = floatval($base_cost) + $packing_cost;
+
+                mobapp_append_featured_tooltip($titulo, $this);
+
+                $this->add_rate( array(
+                    'id'     => $this->id,
+                    'label'  => $titulo,
+                    'cost'   => $total_cost
+                ));
+
+                mobapp_set_packing_session( $this->id, $base_cost, $packing_cost, $packing_label, $total_cost );
+            }
+            public function init_form_fields() {
+                $zonas = array();
+                $delivery_zones = WC_Shipping_Zones::get_zones();
+                foreach ((array) $delivery_zones as $key => $the_zone ) {
+                    $zonas[] = $the_zone['zone_name'];
+                }
+                $form_fields = array(
+                  'enabled' => array(
+                     'title'   => esc_html__('Activar/Desactivar', 'mobapp-flash-domicilio-envios' ),
+                     'type'    => 'checkbox',
+                     'label'   => esc_html__('Activar método de envío', 'mobapp-flash-domicilio-envios'  ),
+                     'default' => 'yes'
+                  ),
+                  'title' => array(
+                     'title'       => esc_html__('Título del envío en caso de peso excedente', 'mobapp-flash-domicilio-envios' ),
+                     'type'        => 'text',
+                     'description' => esc_html__('Ingresar título del envío', 'mobapp-flash-domicilio-envios'  ),
+                     'default'     => esc_html__('A COTIZAR - PESO SUPERIOR A 50KG - MOBAPP FLASH DOMICILIO', 'mobapp-flash-domicilio-envios' ),
+                     'desc_tip'    => true
+                  ),
+                  'ocultar_para_zonas' => array(
+                    'title'             => __( 'Ocultar envío para zonas específicas', 'mobapp-flash-domicilio-envios' ),
+                    'type'              => 'multiselect',
+                    'class'             => 'wc-enhanced-select',
+                    'css'               => 'width: 400px;',
+                    'default'           => '',
+                    'description'       => __( 'Seleccionar zonas en las que se ocultará este envío', 'mobapp-flash-domicilio-envios' ),
+                    'options'           => $zonas,
+                    'desc_tip'          => true,
+                    'custom_attributes' => array(
+                        'data-placeholder' => __( 'Seleccionar zonas', 'mobapp-flash-domicilio-envios' )
+                    ),
+                 ),
+                 'costo_embalaje' => array(
+                    'title'       => esc_html__('Costo de embalaje (valor fijo)', 'mobapp-flash-domicilio-envios' ),
+                    'type'        => 'text',
+                    'description' => esc_html__('Valor fijo en la misma moneda que la tienda. Se suma a la tarifa tomada del CSV y se muestra unificada al cliente como costo de envío.', 'mobapp-flash-domicilio-envios' ),
+                    'default'     => '0',
+                    'desc_tip'    => true
+                 ),
+                 'label_embalaje' => array(
+                    'title'       => esc_html__('Etiqueta para costo de embalaje (interno)', 'mobapp-flash-domicilio-envios' ),
+                    'type'        => 'text',
+                    'description' => esc_html__('Etiqueta que se utilizará en el pedido como nombre del fee (ej: "Costo embalaje").', 'mobapp-flash-domicilio-envios'  ),
+                    'default'     => esc_html__('Costo embalaje', 'mobapp-flash-domicilio-envios' ),
+                    'desc_tip'    => true
+                 )
+                );
+                mobapp_add_common_fields($form_fields);
+                $this->form_fields = $form_fields;
+            }
+        }
+    }
+}
+add_filter('woocommerce_shipping_methods','agregar_mobapp_flash_domicilio_envios_method');
+function agregar_mobapp_flash_domicilio_envios_method( $methods ){
+    $methods['mobapp-flash-domicilio-envios'] = 'WC_MOBAPP_FLASH_DOMICILIO_ENVIOS';
     return $methods;
 }
 
